@@ -3,8 +3,8 @@
 **English** | [Русский](./README.ru.md)
 
 [![npm](https://img.shields.io/npm/v/mcp-google-tasks)](https://www.npmjs.com/package/mcp-google-tasks)
-[![CI](https://github.com/A1-x-Tech/mcp-google-tasks/actions/workflows/ci.yml/badge.svg)](https://github.com/A1-x-Tech/mcp-google-tasks/actions/workflows/ci.yml)
 [![Glama](https://glama.ai/mcp/servers/A1-x-Tech/mcp-google-tasks/badges/score.svg)](https://glama.ai/mcp/servers/A1-x-Tech/mcp-google-tasks)
+[![CI](https://github.com/A1-x-Tech/mcp-google-tasks/actions/workflows/ci.yml/badge.svg)](https://github.com/A1-x-Tech/mcp-google-tasks/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](./LICENSE)
 
 **A1 Google Tasks MCP** lets an AI app manage Google Tasks in plain language. Plan a project as a task list, break work into subtasks with due dates and notes, mark things done and keep everything in order.
