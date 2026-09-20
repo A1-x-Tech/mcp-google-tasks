@@ -11,7 +11,8 @@
 
 Сервер работает с Google Tasks API через ваш Google-аккаунт. Он отделяет обратимое завершение от безвозвратного удаления и явно показывает ограничения Tasks API, а не создаёт впечатление, что планировщику доступно всё.
 
-- **15 инструментов.** Просмотр, создание и изменение списков и задач, перемещение задач, управление завершением, массовая очистка сделанного и прямой вызов API, когда отдельного инструмента нет.
+- **21 инструментов.** Просмотр, создание и изменение списков и задач, перемещение задач, управление завершением, массовая очистка сделанного и прямой вызов API, когда отдельного инструмента нет.
+- **Подключение из диалога.** Скажите «подключи Google Задачи»: сервер проведёт через создание OAuth-клиента, поймает редирект Google на `127.0.0.1` с PKCE и сам сохранит токены — без конфигов и перезапуска.
 - **Завершение обратимо, удаление — нет.** У `complete_task` есть отмена (`reopen_task`); инструменты удаления отделены и помечены как разрушительные.
 - **Честные сроки.** API хранит только календарную дату — сервер не изображает планирование по часам; время дня записывается в заметки.
 - **Минимальный scope Google.** Единственный scope `tasks` — без доступа к Drive, Calendar и Gmail.
@@ -52,10 +53,10 @@
 
 ## Быстрый старт
 
-Нужны Node.js 20+, Google-аккаунт и OAuth-данные из проекта Google Cloud с включённым Google Tasks API.
+Нужны Node.js 20+ и Google-аккаунт. Учётные данные при установке не нужны: сервер подключается прямо в диалоге.
 
-1. [Подготовьте Google OAuth-доступ](#как-получить-доступ).
-2. Добавьте сервер в AI-приложение.
+1. Добавьте сервер в AI-приложение.
+2. Скажите «подключи Google Задачи» — ассистент проведёт [создание OAuth-клиента и выдачу доступа](#как-получить-доступ), не трогая конфиги.
 3. Отправьте запрос, который только читает данные.
 
 <details open>
@@ -69,9 +70,6 @@
 
 ```bash
 codex mcp add google-tasks \
-  --env GOOGLE_TASKS_CLIENT_ID=your_client_id \
-  --env GOOGLE_TASKS_CLIENT_SECRET=your_client_secret \
-  --env GOOGLE_TASKS_REFRESH_TOKEN=your_refresh_token \
   -- npx -y mcp-google-tasks@latest
 ```
 
@@ -90,9 +88,6 @@ codex mcp list
 
 ```bash
 claude mcp add \
-  --env GOOGLE_TASKS_CLIENT_ID=your_client_id \
-  --env GOOGLE_TASKS_CLIENT_SECRET=your_client_secret \
-  --env GOOGLE_TASKS_REFRESH_TOKEN=your_refresh_token \
   --transport stdio --scope user google-tasks \
   -- npx -y mcp-google-tasks@latest
 ```
@@ -119,12 +114,7 @@ claude mcp list
   "mcpServers": {
     "google-tasks": {
       "command": "npx",
-      "args": ["-y", "mcp-google-tasks@latest"],
-      "env": {
-        "GOOGLE_TASKS_CLIENT_ID": "your_client_id",
-        "GOOGLE_TASKS_CLIENT_SECRET": "your_client_secret",
-        "GOOGLE_TASKS_REFRESH_TOKEN": "your_refresh_token"
-      }
+      "args": ["-y", "mcp-google-tasks@latest"]
     }
   }
 }
@@ -149,12 +139,7 @@ claude mcp list
     "google-tasks": {
       "type": "stdio",
       "command": "npx",
-      "args": ["-y", "mcp-google-tasks@latest"],
-      "env": {
-        "GOOGLE_TASKS_CLIENT_ID": "your_client_id",
-        "GOOGLE_TASKS_CLIENT_SECRET": "your_client_secret",
-        "GOOGLE_TASKS_REFRESH_TOKEN": "your_refresh_token"
-      }
+      "args": ["-y", "mcp-google-tasks@latest"]
     }
   }
 }
@@ -177,19 +162,9 @@ claude mcp list
     "google-tasks": {
       "type": "stdio",
       "command": "npx",
-      "args": ["-y", "mcp-google-tasks@latest"],
-      "env": {
-        "GOOGLE_TASKS_CLIENT_ID": "${input:tasks_client_id}",
-        "GOOGLE_TASKS_CLIENT_SECRET": "${input:tasks_client_secret}",
-        "GOOGLE_TASKS_REFRESH_TOKEN": "${input:tasks_refresh_token}"
-      }
+      "args": ["-y", "mcp-google-tasks@latest"]
     }
-  },
-  "inputs": [
-    { "type": "promptString", "id": "tasks_client_id", "description": "Google OAuth client ID" },
-    { "type": "promptString", "id": "tasks_client_secret", "description": "Google OAuth client secret", "password": true },
-    { "type": "promptString", "id": "tasks_refresh_token", "description": "Google OAuth refresh token", "password": true }
-  ]
+  }
 }
 ```
 
@@ -245,7 +220,20 @@ claude mcp list
 
 ## Как получить доступ
 
-Google Tasks требует OAuth 2.0: одного API-ключа недостаточно.
+Google Tasks требует OAuth 2.0: одного API-ключа недостаточно. Путей два, и первый не требует править конфигурационные файлы.
+
+### Подключение из диалога (рекомендуемый путь)
+
+Скажите «подключи Google Задачи», и ассистент пройдёт флоу вместе с вами:
+
+1. `setup_instructions` выдаёт чек-лист: создать или выбрать проект Google Cloud, включить **Google Tasks API**, настроить consent screen и создать OAuth-клиент типа **Desktop app**.
+2. Скачайте JSON этого клиента («Download JSON») и передайте ассистенту **путь** к файлу — `set_client` сохранит его с правами только для владельца. Секрет через переписку не проходит.
+3. `start_login` возвращает ссылку на согласие Google. Откройте её **на этой же машине** и подтвердите доступ: код возвращается на одноразовый слушатель `127.0.0.1` (PKCE), а не в чат.
+4. `finish_login` меняет код на токены и кладёт их в `~/.config/mcp-google-tasks/credentials.json` (права 0600) и проверяет их реальным вызовом Google Tasks API — так невключённый API ловится сразу.
+
+Токены перечитываются на каждый вызов, поэтому подключение действует немедленно — перезапускать AI-приложение не нужно. `auth_status` показывает состояние, `logout` отзывает токен и удаляет его.
+
+### Переменные окружения (CI и автоматические установки)
 
 1. Создайте или выберите проект Google Cloud и включите **Google Tasks API**.
 2. Настройте OAuth consent screen и создайте OAuth-клиент типа **Desktop app**.
@@ -260,12 +248,15 @@ Refresh token OAuth-приложения в режиме Testing может ис
 
 ## Конфигурация
 
+Все переменные необязательные — без единой из них сервер подключается [из диалога](#подключение-из-диалога-рекомендуемый-путь).
+
 | Переменная | Обязательна | Описание |
 |---|---|---|
-| `GOOGLE_TASKS_CLIENT_ID` | Да* | OAuth client ID. |
-| `GOOGLE_TASKS_CLIENT_SECRET` | Да* | OAuth client secret. |
-| `GOOGLE_TASKS_REFRESH_TOKEN` | Да* | OAuth refresh token. |
-| `GOOGLE_TASKS_ACCESS_TOKEN` | Да* | Короткоживущая альтернатива OAuth-тройке. |
+| `GOOGLE_TASKS_CLIENT_ID` | Нет* | OAuth client ID. |
+| `GOOGLE_TASKS_CLIENT_SECRET` | Нет* | OAuth client secret. |
+| `GOOGLE_TASKS_REFRESH_TOKEN` | Нет* | OAuth refresh token. |
+| `GOOGLE_TASKS_ACCESS_TOKEN` | Нет* | Короткоживущая альтернатива OAuth-тройке. |
+| `GOOGLE_TASKS_OAUTH_PORT` | Нет | Фиксированный порт loopback-слушателя для входа из диалога; нужен при пробросе портов по SSH. |
 | `GOOGLE_TASKS_API_BASE` | Нет | Переопределяет базовый URL Google Tasks API. |
 | `GOOGLE_TASKS_TIMEOUT_MS` | Нет | Тайм-аут одного запроса; по умолчанию `60000` мс. |
 | `GOOGLE_TASKS_MAX_RETRIES` | Нет | Повторы временных ошибок; по умолчанию `3`. |
