@@ -1,6 +1,6 @@
 {
   "name": "mcp-google-tasks",
-  "version": "0.2.0",
+  "version": "1.0.0",
   "description": "MCP server for the Google Tasks API — manage task lists, create and organize tasks with due dates, notes and subtasks, track completion and sync changes. For Claude, Cursor, Codex and other AI clients.",
   "mcpName": "io.github.A1-x-Tech/mcp-google-tasks",
   "type": "module",
