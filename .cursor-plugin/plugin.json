@@ -1,0 +1,24 @@
+{
+  "name": "mcp-google-tasks",
+  "displayName": "A1 Google Tasks MCP",
+  "description": "MCP server for the Google Tasks API — manage task lists, create and organize tasks with due dates, notes and subtasks, track completion and sync changes. For Claude, Cursor, Codex and other AI clients",
+  "author": {
+    "name": "Aleksandr Kovalko & Zinnur Temerbekov"
+  },
+  "homepage": "https://github.com/A1-x-Tech/mcp-google-tasks#readme",
+  "repository": "https://github.com/A1-x-Tech/mcp-google-tasks",
+  "license": "MIT",
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "google",
+    "google-tasks",
+    "tasks",
+    "todo",
+    "productivity",
+    "claude",
+    "cursor",
+    "codex"
+  ],
+  "logo": "assets/a1-logo.svg"
+}
