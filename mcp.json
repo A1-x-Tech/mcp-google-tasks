@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "google-tasks": {
+      "type": "stdio",
+      "command": "npx",
+      "args": [
+        "-y",
+        "mcp-google-tasks@latest"
+      ]
+    }
+  }
+}
