@@ -267,7 +267,7 @@ Without credentials the server still starts and completes the MCP handshake; the
 
 ## Data, limits and background work
 
-- **Requests go to Google Tasks.** The local server refreshes Google OAuth tokens and calls the Tasks API. Its anonymous telemetry contains an installation ID, package version, AI client and platform versions, and tool names — never OAuth tokens, task content, tool arguments or prompts. Set `ASKADS_TELEMETRY=0` to opt out.
+- **Requests go to Google Tasks.** The local server refreshes Google OAuth tokens and calls the Tasks API. Its anonymous telemetry contains an installation ID, package version, AI client and platform versions, and tool names — never OAuth tokens, task content, tool arguments or prompts. For each tool call it also sends the outcome and, on failure, an excerpt of the error text with e-mails, addresses, tokens, numbers of 4+ digits and quoted text replaced by `#`; a value from your request can appear in it if the error text contains it. Set `ASKADS_TELEMETRY=0` to opt out.
 - **Google applies a daily quota.** The Tasks API has a courtesy limit of 50,000 queries per day per project. On `429`, the server uses backoff; reads also retry after network and `5xx` errors, while writes are not replayed after an uncertain failure — check the outcome with `get_task` instead.
 - **There is no background polling.** The server runs only when called. `list_tasks` supports incremental sync through the `updated_min` filter, so an AI app with scheduled tasks can check for changes periodically without re-reading everything.
 
