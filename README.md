@@ -56,7 +56,7 @@ Start with a read-only question:
 You need Node.js 20+ and a Google account. Credentials are not required at install time — the server connects from the conversation.
 
 1. Add the server to your AI app.
-2. Say "connect Google Tasks": the assistant walks you through [creating the OAuth client and approving access](#getting-access) without editing config files.
+2. Say "connect Google Tasks": the assistant gives you a Google sign-in link — [no Google Cloud project or OAuth client to create](#getting-access).
 3. Ask the read-only question above.
 
 <details open>
@@ -64,7 +64,7 @@ You need Node.js 20+ and a Google account. Credentials are not required at insta
 
 <br>
 
-**In the app:** open **Settings → MCP servers**, select **Add server**, choose **STDIO**, enter the command `npx -y mcp-google-tasks@latest` and environment variables `GOOGLE_TASKS_CLIENT_ID`, `GOOGLE_TASKS_CLIENT_SECRET`, `GOOGLE_TASKS_REFRESH_TOKEN`, then select **Save** and **Restart**.
+**In the app:** open **Settings → MCP servers**, select **Add server**, choose **STDIO**, enter the command `npx -y mcp-google-tasks@latest`, then select **Save** and **Restart**.
 
 **From the command line:**
 
@@ -224,12 +224,20 @@ Google Tasks requires OAuth 2.0; an API key is not enough. There are two ways in
 
 ### Connect from the chat (recommended)
 
-Say "connect Google Tasks" and the assistant runs the flow with you:
+Say "connect Google Tasks". The server ships with a built-in OAuth client, so there is no Google Cloud project or OAuth client to create:
+
+1. `start_login` returns a Google consent link. Open it **on this machine** and approve; the code comes back to a one-shot listener on `127.0.0.1` (PKCE), never through the chat.
+2. `finish_login` exchanges the code, saves the tokens to `~/.config/mcp-google-tasks/credentials.json` (mode 0600) and verifies them with a real Google Tasks API call — so an API that is still switched off is caught right there.
+
+Google may show a **"Google hasn't verified this app"** screen while the app's verification is in progress: choose **Advanced → Go to A1 MCP**. The built-in client only identifies the app to Google — the tokens are issued to and stored on your machine, and A1 never receives them.
+
+#### Use your own OAuth client
+
+The built-in client and its Google API quota are shared by everyone who uses it. Bring your own client to get a quota of your own, or when a Google Workspace admin blocks third-party apps:
 
 1. `setup_instructions` prints the checklist: create or select a Google Cloud project, enable **Google Tasks API**, configure the consent screen and create a **Desktop app** OAuth client.
-2. Download that client's JSON ("Download JSON") and give the assistant its **path** — `set_client` stores it owner-only. The secret never goes through the conversation.
-3. `start_login` returns a Google consent link. Open it **on this machine** and approve; the code comes back to a one-shot listener on `127.0.0.1` (PKCE), never through the chat.
-4. `finish_login` exchanges the code and saves the tokens to `~/.config/mcp-google-tasks/credentials.json` (mode 0600) and verifies them with a real Google Tasks API call — so an API that is still switched off is caught right there.
+2. Download that client's JSON ("Download JSON") and give the assistant its **path** — `set_client` stores it owner-only. The secret never goes through the conversation. From then on it takes priority over the built-in client.
+3. Run `start_login` and `finish_login` again.
 
 The tokens are re-read on every call, so the connection works immediately — no restart of the AI app. `auth_status` shows what is connected, `logout` revokes and deletes it.
 
@@ -261,9 +269,9 @@ Every variable is optional — with none of them the server connects [from the c
 | `GOOGLE_TASKS_TIMEOUT_MS` | No | Per-request timeout; default `60000` ms. |
 | `GOOGLE_TASKS_MAX_RETRIES` | No | Temporary-error retries; default `3`. |
 
-\* Provide either the OAuth trio or an access token.
+\* Only for a setup without the in-chat login: provide either the OAuth trio or an access token.
 
-Without credentials the server still starts and completes the MCP handshake; the first tool call then fails with a message naming the variables to set and asking for a restart.
+Without credentials the server still starts and completes the MCP handshake; the first tool call then explains how to connect from the chat (`start_login` and `finish_login`) and names the variables for a setup without it.
 
 ## Data, limits and background work
 
