@@ -229,7 +229,7 @@ Say "connect Google Tasks". The server ships with a built-in OAuth client, so th
 1. `start_login` returns a Google consent link. Open it **on this machine** and approve; the code comes back to a one-shot listener on `127.0.0.1` (PKCE), never through the chat.
 2. `finish_login` exchanges the code, saves the tokens to `~/.config/mcp-google-tasks/credentials.json` (mode 0600) and verifies them with a real Google Tasks API call — so an API that is still switched off is caught right there.
 
-Google has verified the A1 MCP app, so sign-in goes straight to the consent screen with no unverified-app warning. The built-in client only identifies the app to Google — the tokens are issued to and stored on your machine, and A1 never receives them.
+Google has approved verification of the A1 MCP app for the scopes this server requests. The built-in client only identifies the app to Google — the tokens are issued to and stored on your machine, and A1 never receives them.
 
 #### Use your own OAuth client
 
